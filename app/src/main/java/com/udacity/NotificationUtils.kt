@@ -9,8 +9,10 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationBuilderWithBuilderAccessor
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.toBitmap
 import timber.log.Timber
 
 private const val NOTIFICATION_ID = 0
@@ -43,6 +45,13 @@ fun NotificationManager.sendNotification(
         PendingIntent.FLAG_IMMUTABLE
     )
 
+    val bmp = AppCompatResources
+        .getDrawable(context, R.mipmap.ic_launcher)?.toBitmap()
+
+    val style = NotificationCompat.BigPictureStyle()
+        .bigPicture(bmp)
+        .setBigContentTitle(context.getString(R.string.notification_title))
+
     val builder = NotificationCompat.Builder(
         context,
         channelId
@@ -55,6 +64,7 @@ fun NotificationManager.sendNotification(
         .setAutoCancel(true)
         .addExtras(bundle)
         .setExtras(bundle)
+        .setStyle(style)
         .addAction(R.drawable.ic_assistant_black_24dp,
             context.getString(R.string.notification_button),
             contentPendingIntent)
