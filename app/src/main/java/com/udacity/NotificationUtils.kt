@@ -29,51 +29,55 @@ fun NotificationManager.sendNotification(
     channelId: String,
     context: Context
 ) {
-    Timber.d("starting NotificationManager.sendNotification with id: %d", downloadId)
+    ifSupportsOreo {
+        Timber.d("starting NotificationManager.sendNotification with id: %d", downloadId)
 
-    val bundle = Bundle()
-    bundle.putLong(DOWNLOAD_ID, downloadId)
-    bundle.putString("TEST", "test")
+        val bundle = Bundle()
+        bundle.putLong(DOWNLOAD_ID, downloadId)
+        bundle.putString("TEST", "test")
 
-    val contentIntent = Intent(context, DetailActivity::class.java)
-    contentIntent.putExtras(bundle)
+        val contentIntent = Intent(context, DetailActivity::class.java)
+        contentIntent.putExtras(bundle)
 
-    val contentPendingIntent = PendingIntent.getActivity(
-        context,
-        NOTIFICATION_ID,
-        contentIntent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
+        val contentPendingIntent = PendingIntent.getActivity(
+            context,
+            NOTIFICATION_ID,
+            contentIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
-    val bmp = AppCompatResources
-        .getDrawable(context, R.mipmap.ic_launcher)?.toBitmap()
+        val bmp = AppCompatResources
+            .getDrawable(context, R.mipmap.ic_launcher)?.toBitmap()
 
-    val style = NotificationCompat.BigPictureStyle()
-        .bigPicture(bmp)
-        .setBigContentTitle(context.getString(R.string.notification_title))
+        val style = NotificationCompat.BigPictureStyle()
+            .bigPicture(bmp)
+            .setBigContentTitle(context.getString(R.string.notification_title))
 
-    val builder = NotificationCompat.Builder(
-        context,
-        channelId
-    ).setSmallIcon(R.drawable.ic_assistant_black_24dp)
-        .setContentTitle(context.getString(R.string.notification_title))
-        .setContentText(messageBody)
-        .setContentIntent(contentPendingIntent)
-        .setPriority(Notification.PRIORITY_MAX)
-        .setChannelId(channelId)
-        .setAutoCancel(true)
-        .addExtras(bundle)
-        .setExtras(bundle)
-        .setStyle(style)
-        .addAction(R.drawable.ic_assistant_black_24dp,
-            context.getString(R.string.notification_button),
-            contentPendingIntent)
-    Timber.d("sending notification")
-    notify(NOTIFICATION_ID, builder.build())
+        val builder = NotificationCompat.Builder(
+            context,
+            channelId
+        ).setSmallIcon(R.drawable.ic_assistant_black_24dp)
+            .setContentTitle(context.getString(R.string.notification_title))
+            .setContentText(messageBody)
+            .setContentIntent(contentPendingIntent)
+            .setPriority(Notification.PRIORITY_MAX)
+            .setChannelId(channelId)
+            .setAutoCancel(true)
+            .addExtras(bundle)
+            .setExtras(bundle)
+            .setStyle(style)
+            .addAction(
+                R.drawable.ic_assistant_black_24dp,
+                context.getString(R.string.notification_button),
+                contentPendingIntent
+            )
+        Timber.d("sending notification")
+        notify(NOTIFICATION_ID, builder.build())
+    }
 }
 
 fun NotificationManager.createChannel(channelId: String, channelName: String) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    ifSupportsOreo {
         val notificationChannel = NotificationChannel(
             channelId,
             channelName,
@@ -89,5 +93,13 @@ fun NotificationManager.createChannel(channelId: String, channelName: String) {
 
         Timber.d("Creating NotifcationChannel")
         createNotificationChannel(notificationChannel)
+    }
+}
+
+fun ifSupportsOreo(f: () -> Unit) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        f()
+    }else{
+        Timber.w("Function execution not supported due to low API level <33")
     }
 }

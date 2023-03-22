@@ -20,6 +20,7 @@ class LoadingButton @JvmOverloads constructor(
     private var fillWidth = 0
     private var sweepAngle = 0
     private var buttonText = "hit me"
+    private var fillColor = R.color.colorPrimaryDark
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
@@ -31,7 +32,7 @@ class LoadingButton @JvmOverloads constructor(
 
     private val valueAnimator = ValueAnimator()
 
-    var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
+    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
         when (new) {
             ButtonState.Clicked -> {
                 Timber.d("ButtonState.Clicked")
@@ -46,9 +47,12 @@ class LoadingButton @JvmOverloads constructor(
             }
             ButtonState.Completed -> {
                 Timber.d("ButtonState.Completed")
+                /*
                 isClickable = true
                 stopDownloadAnimation()
                 buttonText = getContext().getString(R.string.button_name)
+
+                 */
             }
         }
 
@@ -58,22 +62,35 @@ class LoadingButton @JvmOverloads constructor(
         Timber.d("setting up valueAnimator")
         valueAnimator.setIntValues(0, widthSize)
         valueAnimator.setDuration(2000L)
+        valueAnimator.repeatCount = ValueAnimator.INFINITE
         valueAnimator.addUpdateListener { animator ->
             Timber.d("valueAnimator update")
             fillWidth = animator.animatedValue as Int;
             sweepAngle =  ((fillWidth.toFloat() / widthSize.toFloat()) * 360).toInt()
 
-            if (fillWidth >= widthSize) {
+
+            if (fillWidth >= widthSize && buttonState ==ButtonState.Completed) {
                 Timber.d("fillWidth at maximum, resetting animation")
-                buttonState = ButtonState.Completed
+                stopDownloadAnimation()
             }
+
             invalidate()
         }
         buttonState = ButtonState.Loading
     }
 
+    fun downloadFinished(){
+        buttonState = ButtonState.Completed
+    }
+
+    fun downloadStarted(){
+        buttonState = ButtonState.Clicked
+    }
+
     private fun stopDownloadAnimation() {
         Timber.d("stopping valueAnimator")
+        isClickable = true
+        buttonText = getContext().getString(R.string.button_name)
         valueAnimator.cancel()
         valueAnimator.removeAllUpdateListeners()
         fillWidth = 0
@@ -86,6 +103,7 @@ class LoadingButton @JvmOverloads constructor(
         Timber.d("Initializing LoadingButton")
         context.withStyledAttributes(attrs, R.styleable.LoadingButton) {
             buttonText = getString(R.styleable.LoadingButton_text).toString()
+            fillColor = getResourceId(R.styleable.LoadingButton_fillColor, R.color.colorPrimaryDark)
         }
         buttonState = ButtonState.Completed
     }
@@ -93,7 +111,7 @@ class LoadingButton @JvmOverloads constructor(
     override fun performClick(): Boolean {
         Timber.d("click")
         super.performClick()
-        buttonState = ButtonState.Clicked
+        //buttonState = ButtonState.Clicked
         return true
     }
 
@@ -102,7 +120,7 @@ class LoadingButton @JvmOverloads constructor(
         paint.color = context.getColor(R.color.colorPrimary)
         canvas.drawRect(0f, 0f, widthSize.toFloat(), heightSize.toFloat(), paint)
 
-        paint.color = resources.getColor(R.color.colorPrimaryDark)
+        paint.color = resources.getColor(fillColor)
         canvas.drawRect(0f, 0f, fillWidth.toFloat(), heightSize.toFloat(), paint)
 
         paint.color = resources.getColor(R.color.colorAccent)

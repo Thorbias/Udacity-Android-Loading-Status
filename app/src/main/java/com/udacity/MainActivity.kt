@@ -78,13 +78,17 @@ class MainActivity : AppCompatActivity() {
                 if (cursor.moveToFirst()) {
                     val idx = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
                     val uri = cursor.getString(idx)
+                    val bytesIdx = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                    val bytes = cursor.getInt(bytesIdx)
                     Timber.d("uri of download %s", uri)
+                    Timber.d("total size of download %d", bytes)
                     message = getString(R.string.notification_description, uri)
                 }
                 Toast.makeText(applicationContext, R.string.download_complete, Toast.LENGTH_SHORT)
                     .show()
                 Timber.d("Calling sendNotification with downloadId: %d", id)
 
+                custom_button.downloadFinished()
                 notificationManager.sendNotification(message, id, CHANNEL_ID, applicationContext)
 
             }
@@ -105,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadID =
             downloadManager.enqueue(request)// enqueue puts the download request in the queue.
+        custom_button.downloadStarted()
     }
 
     companion object {
